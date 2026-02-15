@@ -4,7 +4,7 @@
 
 ### POST `/users/register`
 
-**Description:** Registers a new user account. Validates the input data, hashes the password, creates the user in the database, generates a JWT auth token, and sets it as an HTTP-only cookie.
+**Description:** Registers a new user account. Validates the input data, hashes the password, and creates the user in the database.
 
 ---
 
@@ -44,7 +44,7 @@
 
 #### ✅ `201 Created` — User registered successfully
 
-The response includes the newly created user object and sets a JWT token as an HTTP-only cookie.
+The response includes the newly created user object.
 
 ```json
 {
@@ -92,13 +92,8 @@ Returned when a user with the provided email is already registered.
 
 ### Notes
 
-- On successful registration, a JWT cookie named `token` is set with the following options:
-  - `httpOnly: true`
-  - `secure: true`
-  - `sameSite: "strict"`
-  - `maxAge: 15 hours`
 - The password is hashed using **bcrypt** (11 salt rounds) before being stored.
-- The JWT token expires in **1 day**.
+- No token or cookie is set during registration — the user must log in separately after registering.
 
 ---
 
@@ -202,3 +197,107 @@ Returned when the email does not exist or the password is incorrect.
   - `maxAge: 15 hours`
 - The JWT token expires in **1 day**.
 - The `password` field is explicitly selected for comparison but is not returned in the response.
+
+---
+
+### GET `/users/profile`
+
+**Description:** Returns the authenticated user's profile. Requires a valid JWT token (via cookie or `Authorization: Bearer <token>` header). The token must not be blacklisted.
+
+---
+
+### Request
+
+**Method:** `GET`
+
+**URL:** `/users/profile`
+
+**Authentication:** Required (JWT token via cookie or `Authorization` header)
+
+#### Headers
+
+| Header          | Value                  | Required |
+| --------------- | ---------------------- | -------- |
+| `Authorization` | `Bearer <jwt_token>`   | Yes (if no cookie) |
+
+> **Note:** If the `token` cookie is set (e.g. after login), no `Authorization` header is needed.
+
+---
+
+### Responses
+
+#### ✅ `200 OK` — Profile retrieved successfully
+
+```json
+{
+  "user": {
+    "_id": "64f...",
+    "fullName": {
+      "firstName": "John",
+      "lastName": "Doe"
+    },
+    "email": "john.doe@example.com",
+    "socketId": ""
+  }
+}
+```
+
+#### ❌ `401 Unauthorized` — Missing, invalid, or blacklisted token
+
+```json
+{
+  "message": "Unauthorized"
+}
+```
+
+---
+
+### POST `/users/logout`
+
+**Description:** Logs out the authenticated user by clearing the `token` cookie and adding the token to a blacklist collection so it cannot be reused. Requires a valid JWT token.
+
+---
+
+### Request
+
+**Method:** `POST`
+
+**URL:** `/users/logout`
+
+**Authentication:** Required (JWT token via cookie or `Authorization` header)
+
+#### Headers
+
+| Header          | Value                  | Required |
+| --------------- | ---------------------- | -------- |
+| `Authorization` | `Bearer <jwt_token>`   | Yes (if no cookie) |
+
+> **Note:** No request body is needed.
+
+---
+
+### Responses
+
+#### ✅ `200 OK` — User logged out successfully
+
+```json
+{
+  "message": "User logged out successfully"
+}
+```
+
+#### ❌ `401 Unauthorized` — Missing, invalid, or blacklisted token
+
+```json
+{
+  "message": "Unauthorized"
+}
+```
+
+---
+
+### Notes
+
+- The `token` cookie is cleared on logout.
+- The token is added to a **blacklist** (`Blacklist` collection) to prevent reuse.
+- Blacklisted tokens automatically expire after **12 hours** (TTL index via `expires` in the schema).

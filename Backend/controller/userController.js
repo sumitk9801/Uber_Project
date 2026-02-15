@@ -1,7 +1,8 @@
-const User = require("../models/UserModel");
+const UserModel = require("../models/UserModel");
 const userService = require("../services/userService");
 const {validationResult} = require("express-validator");
-
+const BlacklistModel = require("../models/blacklistModel");
+//Login
 const loginUser=async(req,res)=>{
     try{
         //Validation
@@ -15,7 +16,7 @@ const loginUser=async(req,res)=>{
             return res.status(400).json({message:"All Fields are required"});
         }
         //Find User
-        const user = await User.findOne({email}).select("+password");
+        const user = await UserModel.findOne({email}).select("+password");
         if(!user) return res.json({status:401,message:"Invalid Credentials"});
 
         //Compare Password
@@ -37,10 +38,18 @@ const loginUser=async(req,res)=>{
     }
 }
 
+//Profile
+const getUserProfile=async(req,res)=>{
+    try{
+        const user = req.user;
+        return res.status(200).json({user})
+    }catch(error){
+        console.log(error.message)
+    }
+    
+};
 
-
-
-
+//Register
 const registerUser=async(req,res,next)=>{
     try{
         const errors = validationResult(req);
@@ -48,8 +57,8 @@ const registerUser=async(req,res,next)=>{
             return res.status(400).json({errors:errors.array()})
         }
         const {fullName,email,password} = req.body;
-        const hashedPassword = await User.hashpassword(password);
-        const user = await User.findOne({email});
+        const hashedPassword = await UserModel.hashpassword(password);
+        const user = await UserModel.findOne({email});
         if(user){
             return res.status(400).json({message:"User already exists"})
         }
@@ -59,17 +68,23 @@ const registerUser=async(req,res,next)=>{
                 email,
                 password:hashedPassword
             });
-        const token = newUser.generateAuthToken();
-        res.cookie("token",token,{
-            httpOnly:true,
-            secure:true,
-            sameSite:"strict",
-            maxAge:15*60*60*1000
-        })
         return res.status(201).json({message:"User created successfully",newUser})
     }
     catch(error){
         console.log(error.message)
     }
 }
-module.exports = {registerUser,loginUser}
+
+//Logout
+const logoutUser=async(req,res)=>{
+    try{
+       res.clearCookie("token");
+       const token = req.cookies.token;
+       const blacklistedToken = await BlacklistModel.create({token});
+       return res.status(200).json({message:"User logged out successfully"})
+    }
+    catch(error){
+        console.log(error.message)
+    }
+}
+module.exports = {registerUser, loginUser, getUserProfile,logoutUser}
