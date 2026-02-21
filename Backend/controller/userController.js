@@ -35,6 +35,7 @@ const loginUser=async(req,res)=>{
     }
     catch(error){
         console.log(error.message)
+        return res.status(500).json({message:error.message})
     }
 }
 
@@ -45,6 +46,7 @@ const getUserProfile=async(req,res)=>{
         return res.status(200).json({user})
     }catch(error){
         console.log(error.message)
+        return res.status(500).json({message:error.message})
     }
     
 };
@@ -72,6 +74,7 @@ const registerUser=async(req,res)=>{
     }
     catch(error){
         console.log(error.message)
+        return res.status(500).json({message:error.message})
     }
 }
 
@@ -88,6 +91,7 @@ const logoutUser=async(req,res)=>{
     }
     catch(error){
         console.log(error.message)
+        return res.status(500).json({message:error.message})
     }
 }
 module.exports = {registerUser, loginUser, getUserProfile,logoutUser}

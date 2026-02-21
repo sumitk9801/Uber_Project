@@ -3,10 +3,13 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const userRouter = require("./routes/userRouter");
 const captainRouter = require("./routes/captainRouter");
-
+const dotenv = require("dotenv").config();
 
 const app = express();
-app.use(cors()); //enable cors
+app.use(cors({
+    origin: process.env.CLIENT_URI,
+    credentials: true
+})); //enable cors
 app.use(express.json()); //parse the json
 app.use(express.urlencoded({extended:true})); //parse the urlencoded
 app.use(cookieParser()); //read the cookie
