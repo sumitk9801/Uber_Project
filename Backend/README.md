@@ -335,6 +335,8 @@ Returned when the email does not exist or the password is incorrect.
 | `documents.license`       | String | Yes      | Minimum 3 characters                          |
 | `documents.registration`  | String | Yes      | Minimum 3 characters                          |
 | `documents.insurance`     | String | Yes      | Minimum 3 characters                          |
+| `location.lat`            | Number | No       | Latitude (set later via GPS if not provided)  |
+| `location.lng`            | Number | No       | Longitude (set later via GPS if not provided) |
 
 #### Example Request Body
 
@@ -356,6 +358,10 @@ Returned when the email does not exist or the password is incorrect.
     "license": "LIC-12345",
     "registration": "REG-67890",
     "insurance": "INS-11223"
+  },
+  "location": {
+    "lat": 19.076,
+    "lng": 72.877
   }
 }
 ```
@@ -529,6 +535,72 @@ Returned when the email does not exist or the password is incorrect.
   - `maxAge: 24 hours`
 - The JWT token expires in **24 hours**.
 - The `password` field is explicitly selected for comparison but is not returned in the response.
+
+---
+
+### GET `/captains/profile`
+
+**Description:** Returns the authenticated captain's profile. Requires a valid JWT token (via cookie or `Authorization: Bearer <token>` header). The token must not be blacklisted. Uses the `authCaptain` middleware.
+
+---
+
+### Request
+
+**Method:** `GET`
+
+**URL:** `/captains/profile`
+
+**Authentication:** Required (JWT token via cookie or `Authorization` header)
+
+#### Headers
+
+| Header          | Value                  | Required |
+| --------------- | ---------------------- | -------- |
+| `Authorization` | `Bearer <jwt_token>`   | Yes (if no cookie) |
+
+> **Note:** If the `token` cookie is set (e.g. after login), no `Authorization` header is needed.
+
+---
+
+### Responses
+
+#### ✅ `200 OK` — Profile retrieved successfully
+
+```json
+{
+  "captain": {
+    "_id": "64f...",
+    "fullName": {
+      "firstName": "Ravi",
+      "lastName": "Kumar"
+    },
+    "email": "ravi.kumar@example.com",
+    "status": "inactive",
+    "vehicle": {
+      "color": "Black",
+      "plateNumber": "MH12AB1234",
+      "capacity": 4,
+      "vehicleType": "car"
+    },
+    "documents": {
+      "license": "LIC-12345",
+      "registration": "REG-67890",
+      "insurance": "INS-11223"
+    },
+    "rating": 0,
+    "totalRides": 0,
+    "earnings": 0
+  }
+}
+```
+
+#### ❌ `401 Unauthorized` — Missing, invalid, or blacklisted token
+
+```json
+{
+  "message": "Unauthorized"
+}
+```
 
 ---
 

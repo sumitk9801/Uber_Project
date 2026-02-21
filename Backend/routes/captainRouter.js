@@ -1,5 +1,5 @@
 const express = require("express");
-const {registerCaptain,loginCaptain,logoutCaptain} = require("../controller/CaptainController.js");
+const {registerCaptain,loginCaptain,logoutCaptain,getCaptainProfile} = require("../controller/CaptainController.js");
 const {body} = require("express-validator");
 const authCaptain = require("../middlewares/authCaptainMiddleware.js");
 
@@ -23,6 +23,8 @@ router.post("/login",[
     body("password").isLength({min:6}).withMessage("Password must be at least 6 characters long")
 ],loginCaptain)
 
-router.post("/logout",authCaptain,logoutCaptain)
+router.get("/profile",authCaptain,getCaptainProfile);
+
+router.post("/logout",authCaptain,logoutCaptain);
 
 module.exports = router;
