@@ -1,10 +1,10 @@
-const User = require("../models/UserModel");
+const captainModel = require("../models/CaptainModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const BlacklistModel = require("../models/blacklistModel");
 
 
-const authUser = async(req,res,next)=>{
+const authCaptain = async(req,res,next)=>{
     const token = req.cookies.token||req.headers.authorization?.split(" ")[1];
 
     if(!token){
@@ -16,11 +16,16 @@ const authUser = async(req,res,next)=>{
     }
     try{
         const decoded = jwt.verify(token,process.env.JWT_SECRET);
-        const user = await User.findById(decoded._id);
-        if(!user){
+
+        const captain = await captainModel.findById(decoded.id);
+
+        if(captain.role !== "captain"){
+            return res.status(401).json({message:"Unauthorized"})
+        }
+        if(!captain){
            return res.status(401).json({message:"Unauthorized"})
         }
-       req.user = user;
+       req.captain = captain;
        next();
     }
     catch(error){
@@ -28,4 +33,4 @@ const authUser = async(req,res,next)=>{
         return res.status(401).json({message:"Unauthorized"})
     }
 }
-module.exports = authUser;
+module.exports = authCaptain;
